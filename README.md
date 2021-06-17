@@ -36,7 +36,7 @@ I had the opportunity to build a fairly complex app for a non profit organiozati
 
 ## Remaining tasks
 
-The code is not finished and it's still work in progress due limited time.
+The code is not finished and it's still work in progress beacuse of limited time.
 
 - The code must be refactored, there are a lot of repeated parts - eg. Toast messages
 - The code of the Apollo server must be edited for clarity and resolvers must be separated and grouped-
