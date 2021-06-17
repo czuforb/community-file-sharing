@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model annuncements {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  org         String   @db.VarChar(60)
+  title       String   @unique @db.VarChar(255)
+  owner       String   @db.VarChar(255)
+  contact     String   @db.VarChar(60)
+  description String   @db.VarChar(255)
+  created     DateTime @default(now()) @db.Timestamp(0)
+  updated     DateTime @default(now()) @db.Timestamp(0)
+  public      Boolean  @default(false)
+  published   Boolean  @default(false)
+}
+
+model categories {
+  id            BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  title         String          @db.VarChar(255)
+  description   String          @db.Text
+  public        Boolean
+  slug          String          @unique @db.VarChar(50)
+  created       DateTime        @default(now()) @db.Timestamp(0)
+  documents     documents[]
+  subcategories subcategories[]
+}
+
+model documents {
+  id             BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  title          String        @db.VarChar(255)
+  description    String        @db.Text
+  category_FK    BigInt        @db.UnsignedBigInt
+  subcategory_FK BigInt        @db.UnsignedBigInt
+  author         String        @db.VarChar(255)
+  public         Boolean       @default(false)
+  published      Boolean       @default(false)
+  created        DateTime      @default(now()) @db.Timestamp(0)
+  updated        DateTime      @default(now()) @db.Timestamp(0)
+  type           String        @db.VarChar(20)
+  uri            String        @unique @db.VarChar(255)
+  contentType    String        @default("url") @db.VarChar(50)
+  category       categories    @relation(fields: [category_FK], references: [id])
+  subcategory    subcategories @relation(fields: [subcategory_FK], references: [id])
+
+  @@index([category_FK], name: "category_FK")
+  @@index([subcategory_FK], name: "subcategory_FK")
+}
+
+model subcategories {
+  id          BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  title       String      @db.VarChar(255)
+  description String      @db.Text
+  icon        String?     @db.VarChar(255)
+  public      Boolean     @default(false)
+  slug        String      @unique @db.VarChar(50)
+  category_FK BigInt      @db.UnsignedBigInt
+  created     DateTime    @default(now()) @db.Timestamp(0)
+  categories  categories  @relation(fields: [category_FK], references: [id])
+  documents   documents[]
+
+  @@index([category_FK], name: "cat_foreign_key")
+}
+
+model users {
+  id       BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  email    String   @unique @db.VarChar(120)
+  org      String   @db.VarChar(255)
+  role     String   @db.VarChar(255)
+  password String   @db.VarChar(255)
+  admin    Boolean  @default(false)
+  created  DateTime @default(now()) @db.Timestamp(0)
+  updated  DateTime @default(now()) @db.Timestamp(0)
+  login    DateTime @default(now()) @db.Timestamp(0)
+  reset    String   @unique @db.VarChar(36)
+  name     String   @db.VarChar(255)
+  approved Boolean  @default(false)
+}

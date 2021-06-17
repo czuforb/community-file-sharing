@@ -1,0 +1,72 @@
+version: "3.4"
+
+services:
+  db: #mysql
+    image: mysql
+    restart: always
+    healthcheck:
+      test: "exit 0"
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+      - database:/var/lib/mysql
+
+  nextjs:
+    restart: always
+    build:
+      context: ./
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    volumes:
+      - ./uploaded:/usr/src/app/public/uploads
+
+  minio:
+    image: minio/minio
+    hostname: minio
+    volumes:
+      - data1-1:/data1
+      - data1-2:/data2
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    command: minio server /data
+
+  mc:
+    image: minio/mc
+    restart: on-failure
+    depends_on:
+      - minio
+    container_name: mcbkp
+    volumes:
+      - /mcadmin:/etc/mcadmin
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      /usr/bin/mc mb local/toosz --region=eu-east-1;
+      /usr/bin/mc admin user add local $$MINIO_USER $$MINIO_PASSWORD;
+      /usr/bin/mc admin policy set local readwrite user=tooszstorage;
+      /usr/bin/mc admin user info local tooszstorage;
+      "
+
+  nginx:
+    build:
+      context: ./nginx
+    restart: always
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - nextjs
+
+volumes:
+  database:
+  data1-1:
+  data1-2:
